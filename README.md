@@ -1,1 +1,1 @@
-# docker-study
+Os exercicios feitos aqui são a evolução de uma mesma aplicação feita durante a aula do [curso de docker](https://www.udemy.com/share/101WFA3@m5IfU9K6bRiQNiaTrUIWpdjQPDiLwz0VVHqgkveMtU_54RiLQEaoAtQoOCanZrbx/) feita na Udemy. Os exercicios anteriores foram feitos via terminal dada a facilidade dos casos. 
