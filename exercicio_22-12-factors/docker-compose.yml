@@ -1,0 +1,83 @@
+version: '2'
+
+volumes:
+  dados:
+
+networks: 
+  banco:
+  web:
+  fila:
+
+services:
+  db:
+    image: postgres:9.6
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      # Volume dos dados
+      # Isso não tem proposito nenhum neste momento da aula, provavelmente será usado no futuro para um seed inicial do banco
+      - dados:/var/lib/postgresql/data
+      # Scripts
+      - ./scripts:/scripts
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql 
+    networks: # Especificação de qual network será usada por este serviço
+      - banco
+
+  frontend:
+    image: nginx:1.13
+    volumes:
+      # Site
+      - ./web:/usr/share/nginx/html/
+      # Configuração do proxy reverso
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80
+    networks:
+      - web
+    depends_on:
+      - app
+
+  app:
+    image: python:3.6
+    environment:
+      - DB_NAME=email_sender
+    volumes:
+      # Aplicação
+      - ./app:/app
+    working_dir: /app
+    # https://docs.docker.com/compose/compose-file/05-services/#command
+    command: bash ./app.sh # Dado que esse service não possui um dockerfile para expressar como inicia-lo, a aula coloca esse campo que substitui a inicialização padrão do container (que é executar o dockerfile do service)
+    ports:
+      - 8080:8080
+    networks: # https://docs.docker.com/compose/compose-file/05-services/#networks
+      - banco
+      - web
+      - fila
+    # Neste exemplo, o serviço app depende do serviço db. Portanto, ao executar docker-compose up, o Docker Compose primeiro iniciará o serviço db e, em seguida, o serviço app.
+    # É importante observar que o depends_on não garante que o serviço dependente esteja totalmente pronto antes de iniciar o serviço que depende dele. Em vez disso, ele apenas garante que o serviço dependente será iniciado antes. Se você precisar esperar que o serviço dependente esteja pronto, pode ser necessário implementar um mecanismo de espera personalizado no serviço dependente.
+    depends_on: # https://docs.docker.com/compose/compose-file/05-services/#depends_on
+      - db
+
+  worker:
+    build: ./worker # Uso da instrução build no lugar do image para indicar a necessidade de executar um build, neste caso do arquivo worker/Dockerfile
+    volumes:
+      # Worker
+      - ./worker:/worker
+    working_dir: /worker
+    command: worker.py # changed since not the initializer file is the dockerfile
+    networks:
+      - fila
+    depends_on:
+      - queue
+      - app
+
+  queue:
+    image: redis:3.2
+    networks:
+      - fila
+
+
+# Anotações: 
+# Se nenhum campo networks for especificado para um serviço, o Docker Compose o conectará automaticamente à rede padrão criada para o stack do Compose.
+# Se você precisa conectar um serviço a redes específicas, pode usar o campo networks. Isso é útil em cenários em que deseja conectar serviços a redes separadas para controle de acesso, segurança, isolamento ou para conectar serviços em diferentes arquivos docker-compose.yml.

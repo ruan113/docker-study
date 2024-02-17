@@ -1,0 +1,11 @@
+FROM debian
+LABEL maintainer 'author_name <author_email>'
+ARG S3_BUCKET=files
+ENV S3_BUCKET=$S3_BUCKET
+
+# Anotações:
+
+# Args serão usados em tempo de execução dentro do contexto do dockerfile
+
+# Se o dockerfile for rodar algum script externo, você necessitará setar um ENV com o valor daquele ARG, 
+# para que a variavel possa ser usada fora da execução do dockerfile

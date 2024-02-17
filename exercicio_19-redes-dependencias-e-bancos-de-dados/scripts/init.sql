@@ -1,0 +1,1 @@
+create database email_sender; -- Cria database email_sender

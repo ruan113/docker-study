@@ -1,0 +1,23 @@
+version: '2'
+volumes:
+  dados:
+services:
+  db:
+    image: postgres:9.6
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      # Volume dos dados
+      # Isso não tem proposito nenhum neste momento da aula, provavelmente será usado no futuro para um seed inicial do banco
+      - dados:/var/lib/postgresql/data
+      # Scripts
+      - ./scripts:/scripts
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql 
+  frontend:
+    image: nginx:1.13
+    volumes:
+      # Site
+      - ./web:/usr/share/nginx/html/
+    ports:
+      - 80:80
